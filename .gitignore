@@ -1,0 +1,74 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+credentials
+credentials.*
+*.secret
+*.secrets
+*.pem
+*.key
+*.p12
+*.crt
+.streamlit/secrets.toml
+
+# Local/cloud credentials
+.aws/
+aws/credentials
+aws/config
+
+# Raw and generated datasets
+data/*.csv
+data/*.json
+data/*.parquet
+data/raw/
+data/processed/
+data/generated/
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# dbt
+dbt_packages/
+target/
+logs/
+profiles.yml
+
+# Airflow and local orchestration state
+airflow.cfg
+airflow.db
+airflow/logs/
+dags/__pycache__/
+
+# Local databases, warehouses, and tooling state
+*.db
+*.sqlite
+*.sqlite3
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs and local outputs
+*.log
+reports/
+outputs/
