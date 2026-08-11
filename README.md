@@ -125,8 +125,4 @@ git rm --cached data/*.csv
 - Add a guarded text-to-SQL interface with read-only warehouse access
 - Add a Streamlit or BI serving layer
 
-## License
 
-Add a license before publishing if you plan to accept contributions or allow
-reuse. Also confirm that the source dataset and any third-party assets permit
-redistribution.
