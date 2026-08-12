@@ -8,8 +8,10 @@ credentials.*
 *.secrets
 *.pem
 *.key
+*.p8
 *.p12
 *.crt
+.snowflake/
 .streamlit/secrets.toml
 
 # Local/cloud credentials
@@ -41,6 +43,7 @@ htmlcov/
 .mypy_cache/
 
 # dbt
+.dbt/
 dbt_packages/
 target/
 logs/

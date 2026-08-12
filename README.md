@@ -4,13 +4,12 @@ FoodIntel is an end-to-end food analytics and AI project inspired by a modern
 lakehouse workflow. The current repository contains the Snowflake foundation
 for loading Zomato-style restaurant, menu, order, item, user, and review data.
 
-The planned architecture is:
+The current architecture is:
 
 ```text
 Source CSVs → Amazon S3 → Snowflake RAW/BRONZE → dbt STAGING → dbt MARTS → serving layer
-                                      ├── LLM review enrichment
-                                      ├── review embeddings / RAG
-                                      └── governed text-to-SQL
+                                      ├── dbt staging views
+                                      └── dbt analytical marts
 ```
 
 ## Current repository
@@ -23,9 +22,9 @@ Source CSVs → Amazon S3 → Snowflake RAW/BRONZE → dbt STAGING → dbt MARTS
 - `aws/iam/s3-read-policy.json` — read-only S3 policy for the integration role
 - `data/` — local datasets; intentionally excluded from Git
 
-The dbt models, Airflow DAGs, AI enrichment jobs, RAG application, and serving
-dashboard shown in the architecture are planned extensions unless they are
-added to this repository separately.
+The repository currently includes the Snowflake foundation and a dbt project
+with staging and marts models. Airflow orchestration, AI enrichment, RAG, and
+the serving dashboard remain planned extensions.
 
 ## Data model
 
@@ -48,6 +47,63 @@ staging models and analytical marts after the raw load is validated.
   storage integration, stages, tables, and roles
 - SnowSQL, Snowsight, or another Snowflake SQL client
 - Local source files placed under `data/` (not committed)
+
+## dbt project
+
+The dbt project is located in `foodIntel/` and uses the Snowflake adapter.
+
+```text
+foodIntel/
+├── dbt_project.yml
+├── macros/
+├── models/
+│   ├── staging/       # cleaned views sourced from RAW
+│   └── marts/         # analytical tables for reporting
+├── seeds/
+├── snapshots/
+└── tests/
+```
+
+The staging models read from the `FOODINTEL.RAW` tables declared in
+`foodIntel/models/staging/_sources.yml`. Marts are built in the `MARTS`
+schema. Model materializations are configured in `foodIntel/dbt_project.yml`.
+
+### dbt prerequisites
+
+- Python and dbt Core
+- `dbt-snowflake`
+- A Snowflake user with access to the `FOODINTEL` database and required
+  schemas/warehouse
+- A Snowflake authentication method supported by your organization
+
+Install the adapter in the active Python environment:
+
+```bash
+python -m pip install dbt-snowflake
+```
+
+Configure the profile outside the repository at `~/.dbt/profiles.yml`.
+For local development, key-pair authentication is recommended. Keep the
+private key and passphrase outside Git; never put credentials in this README,
+SQL files, or committed YAML files.
+
+Run dbt from the project directory:
+
+```bash
+cd foodIntel
+dbt debug
+dbt run
+dbt test
+```
+
+Useful development commands:
+
+```bash
+dbt parse                 # validate project structure without connecting
+dbt compile               # render SQL into target/ without building models
+dbt build                 # run models and associated tests
+dbt docs generate
+```
 
 ## Setup
 
@@ -82,8 +138,10 @@ staging models and analytical marts after the raw load is validated.
    snowflake/05_load_data.sql
    ```
 
-5. Verify the row counts returned by the final script, then add dbt models and
-   tests for the staging and marts layers.
+5. Verify the row counts returned by the final script.
+
+6. Configure `~/.dbt/profiles.yml`, then run `dbt debug`, `dbt run`, and
+   `dbt test` from the `foodIntel/` directory.
 
 ## Security and privacy
 
@@ -118,11 +176,9 @@ git rm --cached data/*.csv
 ## Roadmap
 
 - Parameterize environment-specific Snowflake and S3 configuration
-- Add dbt staging, marts, tests, documentation, and incremental models
+- Expand dbt tests, documentation, and incremental models
 - Add Airflow orchestration for upload, raw load, dbt builds, and enrichment
 - Add review summarization and sentiment/topic enrichment with an LLM
 - Add embeddings and source-grounded RAG chat
 - Add a guarded text-to-SQL interface with read-only warehouse access
 - Add a Streamlit or BI serving layer
-
-
