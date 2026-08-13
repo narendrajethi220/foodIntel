@@ -1,21 +1,22 @@
 # FoodIntel dbt project
 
 This directory contains the dbt transformation layer for FoodIntel. It reads
-source tables from the `FOODINTEL.RAW` schema and creates cleaned staging
-views and analytical marts in Snowflake.
+source tables from the `FOODINTEL.RAW` schema and creates the Silver and Gold
+layers in Snowflake.
 
 ## Project structure
 
 ```text
 models/
-├── staging/       # source declarations and cleaned staging views
-└── marts/         # dimensions, facts, and reporting models
+├── staging/       # Silver: source declarations and cleaned views
+└── marts/         # Gold: dimensions, facts, and reporting models
 macros/            # reusable dbt macros
 dbt_project.yml    # project and materialization configuration
 ```
 
-Staging models are configured as views in the `STAGING` schema. Marts are
-configured as tables in the `MARTS` schema.
+Staging models are the Silver layer and are configured as views in the
+`STAGING` schema. Marts are the Gold layer and are configured as tables in the
+`MARTS` schema, with incremental fact models where appropriate.
 
 ## Run locally
 

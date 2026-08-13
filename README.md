@@ -7,9 +7,9 @@ for loading Zomato-style restaurant, menu, order, item, user, and review data.
 The current architecture is:
 
 ```text
-Source CSVs → Amazon S3 → Snowflake RAW/BRONZE → dbt STAGING → dbt MARTS → serving layer
-                                      ├── dbt staging views
-                                      └── dbt analytical marts
+Source CSVs → Amazon S3 → Snowflake RAW/BRONZE → dbt SILVER → dbt GOLD → serving layer
+                                      ├── SILVER: cleaned staging views
+                                      └── GOLD: analytical dimensions, facts, and marts
 ```
 
 ## Current repository
@@ -36,9 +36,10 @@ The source data covers:
 - orders and order items
 - customer reviews
 
-The Snowflake setup follows a medallion-style layout with `RAW`, `BRONZE`,
-`STAGING`, `MARTS`, `SNAPSHOTS`, and `AI` schemas. Use dbt to build cleaned
-staging models and analytical marts after the raw load is validated.
+The Snowflake setup follows a medallion-style layout. RAW/BRONZE contains
+landed source data, the dbt `STAGING` schema is the Silver layer, and the dbt
+`MARTS` schema is the Gold layer. Snapshots and AI-enrichment schemas can be
+added as the project grows.
 
 ## Prerequisites
 
@@ -57,16 +58,17 @@ foodIntel/
 ├── dbt_project.yml
 ├── macros/
 ├── models/
-│   ├── staging/       # cleaned views sourced from RAW
-│   └── marts/         # analytical tables for reporting
+│   ├── staging/       # Silver: cleaned views sourced from RAW
+│   └── marts/         # Gold: dimensions, facts, and reporting tables
 ├── seeds/
 ├── snapshots/
 └── tests/
 ```
 
-The staging models read from the `FOODINTEL.RAW` tables declared in
-`foodIntel/models/staging/_sources.yml`. Marts are built in the `MARTS`
-schema. Model materializations are configured in `foodIntel/dbt_project.yml`.
+The Silver staging models read from the `FOODINTEL.RAW` tables declared in
+`foodIntel/models/staging/_sources.yml`. The Gold marts build dimensions,
+incremental fact tables, and reporting models from the Silver layer. Model
+materializations are configured in `foodIntel/dbt_project.yml`.
 
 ### dbt prerequisites
 
@@ -138,7 +140,8 @@ dbt docs generate
    snowflake/05_load_data.sql
    ```
 
-5. Verify the row counts returned by the final script.
+5. Verify the row counts returned by the final script. This validates the
+   RAW/BRONZE layer before building Silver and Gold models.
 
 6. Configure `~/.dbt/profiles.yml`, then run `dbt debug`, `dbt run`, and
    `dbt test` from the `foodIntel/` directory.
