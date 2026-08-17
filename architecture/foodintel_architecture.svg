@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1050" viewBox="0 0 1800 1050">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,3 L0,6 Z" fill="#334155"/>
+    </marker>
+    <style>
+      .title{font:700 32px Arial,sans-serif;fill:#0f172a}.section{font:700 18px Arial,sans-serif;fill:#fff}.label{font:700 19px Arial,sans-serif;fill:#0f172a}.small{font:15px Arial,sans-serif;fill:#334155}.tiny{font:14px Arial,sans-serif;fill:#475569}.box{stroke:#cbd5e1;stroke-width:2}.arrow{stroke:#334155;stroke-width:3;fill:none;marker-end:url(#arrow)}.lane{fill:#f8fafc;stroke:#cbd5e1;stroke-width:2}.task{fill:#fff;stroke:#94a3b8;stroke-width:2}
+    </style>
+  </defs>
+  <rect width="1800" height="1050" fill="#ffffff"/>
+  <text x="900" y="52" text-anchor="middle" class="title">FoodINTEL — End-to-End Food Analytics Architecture</text>
+
+  <!-- Main medallion flow -->
+  <rect x="35" y="90" width="255" height="190" rx="12" class="box" fill="#fef2f2"/>
+  <rect x="35" y="90" width="255" height="42" rx="12" fill="#b91c1c"/>
+  <text x="162" y="118" text-anchor="middle" class="section">SOURCE</text>
+  <text x="162" y="166" text-anchor="middle" class="label">Zomato-style CSVs</text>
+  <text x="162" y="195" text-anchor="middle" class="small">users • restaurants • food</text>
+  <text x="162" y="220" text-anchor="middle" class="small">menu • orders • reviews</text>
+  <text x="162" y="245" text-anchor="middle" class="small">order_items</text>
+
+  <rect x="335" y="90" width="255" height="190" rx="12" class="box" fill="#eff6ff"/>
+  <rect x="335" y="90" width="255" height="42" rx="12" fill="#2563eb"/>
+  <text x="462" y="118" text-anchor="middle" class="section">LAKE</text>
+  <text x="462" y="166" text-anchor="middle" class="label">Amazon S3</text>
+  <text x="462" y="198" text-anchor="middle" class="small">raw CSV folders</text>
+  <text x="462" y="228" text-anchor="middle" class="small">durable landing area</text>
+  <text x="462" y="254" text-anchor="middle" class="tiny">manual or scheduled upload</text>
+
+  <rect x="635" y="90" width="255" height="190" rx="12" class="box" fill="#fff7ed"/>
+  <rect x="635" y="90" width="255" height="42" rx="12" fill="#9a3412"/>
+  <text x="762" y="118" text-anchor="middle" class="section">BRONZE</text>
+  <text x="762" y="166" text-anchor="middle" class="label">Snowflake RAW</text>
+  <text x="762" y="198" text-anchor="middle" class="small">external stage</text>
+  <text x="762" y="226" text-anchor="middle" class="small">COPY INTO RAW tables</text>
+  <text x="762" y="254" text-anchor="middle" class="tiny">source-shaped data</text>
+
+  <rect x="935" y="90" width="255" height="190" rx="12" class="box" fill="#f1f5f9"/>
+  <rect x="935" y="90" width="255" height="42" rx="12" fill="#64748b"/>
+  <text x="1062" y="118" text-anchor="middle" class="section">SILVER</text>
+  <text x="1062" y="166" text-anchor="middle" class="label">dbt STAGING</text>
+  <text x="1062" y="198" text-anchor="middle" class="small">clean • cast • rename</text>
+  <text x="1062" y="226" text-anchor="middle" class="small">join • standardize</text>
+  <text x="1062" y="254" text-anchor="middle" class="tiny">cleaned views</text>
+
+  <rect x="1235" y="90" width="255" height="190" rx="12" class="box" fill="#fffbeb"/>
+  <rect x="1235" y="90" width="255" height="42" rx="12" fill="#d97706"/>
+  <text x="1362" y="118" text-anchor="middle" class="section">GOLD</text>
+  <text x="1362" y="166" text-anchor="middle" class="label">dbt MARTS</text>
+  <text x="1362" y="198" text-anchor="middle" class="small">dimensions • facts</text>
+  <text x="1362" y="226" text-anchor="middle" class="small">reporting marts</text>
+  <text x="1362" y="254" text-anchor="middle" class="tiny">analytics-ready tables</text>
+
+  <rect x="1535" y="90" width="230" height="190" rx="12" class="box" fill="#fef2f2"/>
+  <rect x="1535" y="90" width="230" height="42" rx="12" fill="#dc2626"/>
+  <text x="1650" y="118" text-anchor="middle" class="section">SERVE</text>
+  <text x="1650" y="166" text-anchor="middle" class="label">Streamlit</text>
+  <text x="1650" y="198" text-anchor="middle" class="small">RAG chat</text>
+  <text x="1650" y="226" text-anchor="middle" class="small">text-to-SQL</text>
+  <text x="1650" y="254" text-anchor="middle" class="tiny">dashboards and answers</text>
+
+  <path d="M290 185 H330" class="arrow"/><path d="M590 185 H630" class="arrow"/><path d="M890 185 H930" class="arrow"/><path d="M1190 185 H1230" class="arrow"/><path d="M1490 185 H1530" class="arrow"/>
+
+  <!-- Orchestration lane -->
+  <rect x="35" y="335" width="1730" height="220" rx="16" class="lane"/>
+  <text x="62" y="372" class="label">ORCHESTRATION</text>
+  <text x="62" y="400" class="small">Apache Airflow — DAG: foodIntel_batch</text>
+  <rect x="62" y="430" width="180" height="78" rx="10" class="task"/>
+  <text x="152" y="462" text-anchor="middle" class="label">reload_raw</text><text x="152" y="488" text-anchor="middle" class="tiny">SQL task</text>
+  <rect x="330" y="430" width="220" height="78" rx="10" class="task"/>
+  <text x="440" y="462" text-anchor="middle" class="label">dbt_build_core</text><text x="440" y="488" text-anchor="middle" class="tiny">Silver + Gold</text>
+  <rect x="638" y="430" width="220" height="78" rx="10" class="task"/>
+  <text x="748" y="462" text-anchor="middle" class="label">enrich_reviews</text><text x="748" y="488" text-anchor="middle" class="tiny">Groq classification</text>
+  <rect x="946" y="430" width="220" height="78" rx="10" class="task"/>
+  <text x="1056" y="462" text-anchor="middle" class="label">dbt_build_ai</text><text x="1056" y="488" text-anchor="middle" class="tiny">AI dbt models</text>
+  <path d="M242 469 H325" class="arrow"/><path d="M550 469 H633" class="arrow"/><path d="M858 469 H941" class="arrow"/>
+  <text x="1380" y="458" text-anchor="middle" class="small">PostgreSQL stores Airflow metadata</text>
+  <text x="1380" y="486" text-anchor="middle" class="tiny">DAG runs • task states • schedules</text>
+
+  <!-- AI lane -->
+  <rect x="35" y="610" width="1730" height="365" rx="16" fill="#faf5ff" stroke="#c4b5fd" stroke-width="2"/>
+  <text x="62" y="650" class="label">AI CAPABILITIES</text>
+  <text x="62" y="678" class="small">AI services extend the warehouse without replacing dbt or Snowflake</text>
+
+  <rect x="62" y="715" width="500" height="190" rx="12" fill="#fff" stroke="#c4b5fd" stroke-width="2"/>
+  <text x="88" y="750" class="label">1. Review enrichment</text>
+  <text x="88" y="785" class="small">RAW reviews → Groq → FOODINTEL.AI.REVIEW_ENRICHED</text>
+  <text x="88" y="820" class="tiny">sentiment • sentiment score • topic • key issue</text>
+  <text x="88" y="858" class="tiny">dbt_build_ai → mart_review_insights</text>
+
+  <rect x="620" y="715" width="500" height="190" rx="12" fill="#fff" stroke="#c4b5fd" stroke-width="2"/>
+  <text x="646" y="750" class="label">2. RAG review chat</text>
+  <text x="646" y="785" class="small">reviews → Voyage voyage-4 → vector cache</text>
+  <text x="646" y="820" class="tiny">retrieve similar reviews for a user question</text>
+  <text x="646" y="858" class="tiny">Groq generates a grounded answer with context</text>
+
+  <rect x="1178" y="715" width="540" height="190" rx="12" fill="#fff" stroke="#c4b5fd" stroke-width="2"/>
+  <text x="1204" y="750" class="label">3. Text-to-SQL</text>
+  <text x="1204" y="785" class="small">question → Groq → one safe SELECT query</text>
+  <text x="1204" y="820" class="tiny">Snowflake MARTS → Pandas DataFrame</text>
+  <text x="1204" y="858" class="tiny">Streamlit displays table and chart</text>
+</svg>

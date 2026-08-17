@@ -1,15 +1,24 @@
-# FoodIntel
+# FoodINTEL
 
-FoodIntel is an end-to-end food analytics and AI project inspired by a modern
-lakehouse workflow. The current repository contains the Snowflake foundation
-for loading Zomato-style restaurant, menu, order, item, user, and review data.
+FoodINTEL is an end-to-end food analytics platform. It loads Zomato-style data
+into Snowflake, transforms it with dbt, orchestrates the pipeline with Airflow,
+enriches reviews with Groq, creates Voyage embeddings for RAG, and serves
+results through Streamlit.
 
-The current architecture is:
+The architecture is:
 
 ```text
-Source CSVs → Amazon S3 → Snowflake RAW/BRONZE → dbt SILVER → dbt GOLD → serving layer
-                                      ├── SILVER: cleaned staging views
-                                      └── GOLD: analytical dimensions, facts, and marts
+CSV files → Amazon S3 → Snowflake RAW → dbt STAGING/Silver → dbt MARTS/Gold → Streamlit
+                                      └──────── Airflow orchestrates the complete flow ────────┘
+
+Reviews → Groq enrichment → FOODINTEL.AI.REVIEW_ENRICHED
+Reviews → Voyage voyage-4 embeddings → RAG chat
+MARTS → Groq text-to-SQL → read-only Snowflake queries
+
+![FoodINTEL architecture](architecture/foodintel_architecture.svg)
+
+See [`architecture/`](architecture/) for the detailed file map, flow guide,
+diagram source, and interview preparation.
 ```
 
 ## Current repository
@@ -22,9 +31,9 @@ Source CSVs → Amazon S3 → Snowflake RAW/BRONZE → dbt SILVER → dbt GOLD �
 - `aws/iam/s3-read-policy.json` — read-only S3 policy for the integration role
 - `data/` — local datasets; intentionally excluded from Git
 
-The repository currently includes the Snowflake foundation and a dbt project
-with staging and marts models. Airflow orchestration, AI enrichment, RAG, and
-the serving dashboard remain planned extensions.
+The repository includes the Snowflake foundation, dbt Silver and Gold models,
+Airflow orchestration, Groq review enrichment, Voyage embeddings, RAG, and
+Streamlit text-to-SQL serving applications.
 
 ## Data model
 
@@ -180,8 +189,12 @@ git rm --cached data/*.csv
 
 - Parameterize environment-specific Snowflake and S3 configuration
 - Expand dbt tests, documentation, and incremental models
-- Add Airflow orchestration for upload, raw load, dbt builds, and enrichment
-- Add review summarization and sentiment/topic enrichment with an LLM
-- Add embeddings and source-grounded RAG chat
-- Add a guarded text-to-SQL interface with read-only warehouse access
-- Add a Streamlit or BI serving layer
+- Add stronger data-quality tests, CI/CD, secret management, and monitoring
+- Add environment-specific configuration and a least-privilege service role
+
+## Interview summary
+
+> FoodINTEL is a Snowflake-based medallion data platform orchestrated by Airflow. Source CSV files land in S3, Snowflake loads them into RAW, dbt creates Silver staging views and Gold marts, and AI services enrich reviews, support RAG, and generate read-only SQL for business questions. PostgreSQL stores Airflow metadata, while Snowflake stores the analytical data.
+
+See [`architecture/interview_questions.md`](architecture/interview_questions.md)
+for interview questions and answers.
