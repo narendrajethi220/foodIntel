@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MODEL = "llama-3.3-70b-versatile"
+# Keep the enrichment job on an active model available to the current Groq project.
+MODEL = "openai/gpt-oss-20b"
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 SAMPLE_N=5

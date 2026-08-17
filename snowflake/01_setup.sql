@@ -13,7 +13,7 @@ CREATE SCHEMA  IF NOT EXISTS FOODINTEL.RAW;       -- only used by the COPY fallb
 CREATE SCHEMA  IF NOT EXISTS FOODINTEL.STAGING;   -- cleaned / conformed (dbt)
 CREATE SCHEMA  IF NOT EXISTS FOODINTEL.MARTS;     -- Gold, Iceberg (dbt)
 CREATE SCHEMA  IF NOT EXISTS FOODINTEL.SNAPSHOTS; -- SCD2 history (dbt)
-CREATE SCHEMA  IF NOT EXISTS FOODINTEL.AI;        -- LLM-enriched tables (OpenAI jobs)
+CREATE SCHEMA  IF NOT EXISTS FOODINTEL.AI;        -- LLM-enriched tables (Groq jobs)
 
 -- For airflow/dpt 
 CREATE ROLE IF NOT EXISTS DBT_ROLE;
