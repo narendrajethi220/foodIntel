@@ -5,6 +5,9 @@
 #   docker compose build && docker compose up -d   # UI: http://localhost:8080 (admin/admin)
 x-airflow-common: &airflow-common
   build: .
+  # Reuse the credentials already used by the AI scripts.
+  env_file:
+    - ../ai/.env
   environment: &airflow-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
@@ -19,16 +22,17 @@ x-airflow-common: &airflow-common
     # dbt + the AI task read these:
     SNOWFLAKE_ACCOUNT: ${SNOWFLAKE_ACCOUNT}
     SNOWFLAKE_USER: ${SNOWFLAKE_USER}
-    SNOWFLAKE_PASSWORD: ${SNOWFLAKE_PASSWORD}
-    GROQ_API_KEY: ${GROQ_API_KEY}
-    VOYAGE_API_KEY: ${VOYAGE_API_KEY}
+    # The key path is different inside Docker than on the host.
+    SNOWFLAKE_PRIVATE_KEY_FILE: /opt/airflow/.snowflake/dbt_rsa_key.p8
     SAMPLE_N: ${SAMPLE_N:-5}
-    AIRFLOW_CONN_SNOWFLAKE_DEFAULT: '{"conn_type":"snowflake","login":"${SNOWFLAKE_USER}","password":"${SNOWFLAKE_PASSWORD}","schema":"RAW","extra":{"account":"${SNOWFLAKE_ACCOUNT}","warehouse":"FOODINTEL_WH","database":"FOODINTEL","role":"DBT_ROLE"}}'
+    AIRFLOW_CONN_SNOWFLAKE_DEFAULT: '{"conn_type":"snowflake","login":"${SNOWFLAKE_USER}","password":"${SNOWFLAKE_PRIVATE_KEY_PASSPHRASE}","schema":"RAW","extra":{"account":"${SNOWFLAKE_ACCOUNT}","warehouse":"FOODINTEL_WH","database":"FOODINTEL","role":"DBT_ROLE","private_key_file":"/opt/airflow/.snowflake/dbt_rsa_key.p8"}}'
   volumes:
     - ./dags:/opt/airflow/dags
     - ./logs:/opt/airflow/logs
     - ../foodIntel:/opt/airflow/dbt/foodIntel      # your dbt project
+    - ./dbt_profiles:/opt/airflow/dbt/profiles:ro
     - ../ai:/opt/airflow/ai                       # the enrich_reviews.py script
+    - /home/blackbird/.snowflake:/opt/airflow/.snowflake:ro
   depends_on:
     postgres:
       condition: service_healthy

@@ -5,6 +5,7 @@ from airflow.providers.standard.operators.bash import BashOperator      # Airflo
 
 DBT = "/opt/airflow/dbt_venv/bin/dbt"
 DBT_PROJECT = "/opt/airflow/dbt/foodIntel"
+DBT_PROFILES = "/opt/airflow/dbt/profiles"
 
 COPY_RAW = [
     "USE WAREHOUSE FOODINTEL_WH",
@@ -19,7 +20,8 @@ COPY_RAW = [
 
 with DAG(
     dag_id="foodIntel_batch",
-    start_date=datetime(2026, 10, 15),
+    # Use a past date so Airflow can schedule the DAG now.
+    start_date=datetime(2026, 1, 1),
     schedule="@daily",
     catchup=False,
     tags=["foodIntel", "dbt", "snowflake"],
@@ -36,17 +38,17 @@ with DAG(
 
     dbt_build_core = BashOperator(
         task_id="dbt_build_core",
-        bash_command=f"{DBT} build --exclude tag:ai --project-dir {DBT_PROJECT} --profiles-dir {DBT_PROJECT}",
+        bash_command=f"{DBT} build --exclude tag:ai --project-dir {DBT_PROJECT} --profiles-dir {DBT_PROFILES}",
     )
 
-    # enrich_reviews = BashOperator(
-    #     task_id="enrich_reviews",
-    #     bash_command=f"python /opt/airflow/ai/enrich_reviews.py",
-    # )
+    enrich_reviews = BashOperator(
+        task_id="enrich_reviews",
+        bash_command=f"python /opt/airflow/ai/enrich_reviews.py",
+    )
 
-    # dbt_build_ai = BashOperator(
-    #     task_id = "dbt_build_ai",
-    #     bash_command=f"{DBT} build --select tag:ai --project-dir {DBT_PROJECT} --profiles-dir {DBT_PROJECT}"
-    # )
+    dbt_build_ai = BashOperator(
+        task_id = "dbt_build_ai",
+        bash_command=f"{DBT} build --select tag:ai --project-dir {DBT_PROJECT} --profiles-dir {DBT_PROFILES}"
+    )
 
-    reload_raw >> dbt_build_core  # >> enrich_reviews >> dbt_build_ai
+    reload_raw >> dbt_build_core >> enrich_reviews >> dbt_build_ai
