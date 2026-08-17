@@ -1,200 +1,171 @@
 # FoodINTEL
 
-FoodINTEL is an end-to-end food analytics platform. It loads Zomato-style data
-into Snowflake, transforms it with dbt, orchestrates the pipeline with Airflow,
-enriches reviews with Groq, creates Voyage embeddings for RAG, and serves
-results through Streamlit.
+FoodINTEL is a food analytics application that combines Snowflake, dbt,
+Apache Airflow, Groq, Voyage AI, and Streamlit.
 
-The architecture is:
+The project loads food delivery data, transforms it into analytics-ready
+tables, enriches customer reviews with AI, and provides natural-language data
+search and review analysis.
 
-```text
-CSV files → Amazon S3 → Snowflake RAW → dbt STAGING/Silver → dbt MARTS/Gold → Streamlit
-                                      └──────── Airflow orchestrates the complete flow ────────┘
+## Features
 
-Reviews → Groq enrichment → FOODINTEL.AI.REVIEW_ENRICHED
-Reviews → Voyage voyage-4 embeddings → RAG chat
-MARTS → Groq text-to-SQL → read-only Snowflake queries
+- Load food delivery data from Amazon S3 into Snowflake
+- Transform data with dbt
+- Build staging, fact, dimension, and reporting models
+- Orchestrate the pipeline with Apache Airflow
+- Classify reviews with Groq
+- Search reviews using Voyage AI embeddings and RAG
+- Ask data questions using natural-language text-to-SQL
+- Display results through Streamlit
 
-![FoodINTEL architecture](architecture/foodintel_architecture.svg)
+## Technologies
 
-See [`architecture/`](architecture/) for the detailed file map, flow guide,
-diagram source, and interview preparation.
-```
+- **Storage:** Amazon S3
+- **Data warehouse:** Snowflake
+- **Transformations:** dbt and SQL
+- **Orchestration:** Apache Airflow
+- **Review AI:** Groq
+- **Embeddings:** Voyage AI `voyage-4`
+- **Applications:** Streamlit
+- **Airflow metadata:** PostgreSQL
 
-## Current repository
-
-- `snowflake/01_setup.sql` — database, schemas, warehouse, and `DBT_ROLE`
-- `snowflake/02_storage_integraion.sql` — S3 storage integration
-- `snowflake/03_stage_and_formats.sql` — CSV format and external stage
-- `snowflake/04_raw_tables.sql` — RAW table definitions
-- `snowflake/05_load_data.sql` — `COPY INTO` statements and row-count checks
-- `aws/iam/s3-read-policy.json` — read-only S3 policy for the integration role
-- `data/` — local datasets; intentionally excluded from Git
-
-The repository includes the Snowflake foundation, dbt Silver and Gold models,
-Airflow orchestration, Groq review enrichment, Voyage embeddings, RAG, and
-Streamlit text-to-SQL serving applications.
-
-## Data model
-
-The source data covers:
-
-- restaurants and menus
-- food items
-- users
-- orders and order items
-- customer reviews
-
-The Snowflake setup follows a medallion-style layout. RAW/BRONZE contains
-landed source data, the dbt `STAGING` schema is the Silver layer, and the dbt
-`MARTS` schema is the Gold layer. Snapshots and AI-enrichment schemas can be
-added as the project grows.
-
-## Prerequisites
-
-- An AWS account with an S3 bucket
-- A Snowflake account with permission to create the database, warehouse,
-  storage integration, stages, tables, and roles
-- SnowSQL, Snowsight, or another Snowflake SQL client
-- Local source files placed under `data/` (not committed)
-
-## dbt project
-
-The dbt project is located in `foodIntel/` and uses the Snowflake adapter.
+## Data flow
 
 ```text
-foodIntel/
-├── dbt_project.yml
-├── macros/
-├── models/
-│   ├── staging/       # Silver: cleaned views sourced from RAW
-│   └── marts/         # Gold: dimensions, facts, and reporting tables
-├── seeds/
-├── snapshots/
-└── tests/
+CSV files → Amazon S3 → Snowflake RAW
+                              ↓
+                    dbt staging models
+                              ↓
+                    dbt marts models
+                              ↓
+                Streamlit and AI applications
 ```
 
-The Silver staging models read from the `FOODINTEL.RAW` tables declared in
-`foodIntel/models/staging/_sources.yml`. The Gold marts build dimensions,
-incremental fact tables, and reporting models from the Silver layer. Model
-materializations are configured in `foodIntel/dbt_project.yml`.
+The Airflow pipeline runs these tasks in order:
 
-### dbt prerequisites
+```text
+reload_raw → dbt_build_core → enrich_reviews → dbt_build_ai
+```
 
-- Python and dbt Core
-- `dbt-snowflake`
-- A Snowflake user with access to the `FOODINTEL` database and required
-  schemas/warehouse
-- A Snowflake authentication method supported by your organization
+## Project structure
 
-Install the adapter in the active Python environment:
+```text
+FoodINTEL/
+├── ai/
+│   ├── enrich_reviews.py       # AI review classification
+│   ├── rag.py                  # Review search and RAG application
+│   ├── text_to_sql.py          # Natural-language SQL application
+│   └── .env.example            # Environment variable template
+├── airflow/
+│   ├── dags/foodIntel_batch.py # Airflow workflow
+│   ├── Dockerfile              # Airflow image dependencies
+│   └── docker-compose.yaml     # Airflow and PostgreSQL services
+├── aws/iam/                    # S3 access policy
+├── foodIntel/                  # dbt project
+│   ├── models/staging/         # Cleaned Silver models
+│   ├── models/marts/           # Gold analytics models
+│   └── dbt_project.yml         # dbt configuration
+└── snowflake/                  # Snowflake setup and loading SQL
+```
+
+## Requirements
+
+- Python 3.12 or newer
+- A Snowflake account
+- An Amazon S3 bucket
+- Docker Desktop
+- dbt with the Snowflake adapter
+- Groq API key
+- Voyage AI API key
+
+## Configuration
+
+Copy the environment template:
 
 ```bash
-python -m pip install dbt-snowflake
+cp ai/.env.example ai/.env
 ```
 
-Configure the profile outside the repository at `~/.dbt/profiles.yml`.
-For local development, key-pair authentication is recommended. Keep the
-private key and passphrase outside Git; never put credentials in this README,
-SQL files, or committed YAML files.
+Add your own credentials to `ai/.env`:
 
-Run dbt from the project directory:
+```env
+SNOWFLAKE_ACCOUNT=your_account
+SNOWFLAKE_USER=your_user
+SNOWFLAKE_WAREHOUSE=your_warehouse
+SNOWFLAKE_DATABASE=FOODINTEL
+SNOWFLAKE_SCHEMA=AI
+SNOWFLAKE_PRIVATE_KEY_FILE=/path/to/private_key.p8
+SNOWFLAKE_PRIVATE_KEY_PASSPHRASE=your_passphrase
+GROQ_API_KEY=your_groq_key
+VOYAGE_API_KEY=your_voyage_key
+```
+
+Never commit `.env`, passwords, API keys, private keys, or raw datasets.
+
+## Snowflake setup
+
+Run the SQL files in order from the project root:
+
+```text
+snowflake/01_setup.sql
+snowflake/02_storage_integraion.sql
+snowflake/03_stage_and_formats.sql
+snowflake/04_raw_tables.sql
+snowflake/05_load_data.sql
+```
+
+These scripts create the Snowflake database objects, storage integration,
+external stage, RAW tables, and data loading commands.
+
+## Run dbt locally
 
 ```bash
 cd foodIntel
+python -m pip install dbt-snowflake
 dbt debug
-dbt run
+dbt build
 dbt test
 ```
 
-Useful development commands:
+## Run Airflow
+
+From the `airflow` directory:
 
 ```bash
-dbt parse                 # validate project structure without connecting
-dbt compile               # render SQL into target/ without building models
-dbt build                 # run models and associated tests
-dbt docs generate
+cd airflow
+docker compose --env-file ../ai/.env build
+docker compose --env-file ../ai/.env up -d
 ```
 
-## Setup
+Open Airflow at:
 
-1. Create an S3 bucket and upload the source files using this layout:
+```text
+http://localhost:8081
+```
 
-   ```text
-   s3://<your-bucket>/raw/restaurants/
-   s3://<your-bucket>/raw/users/
-   s3://<your-bucket>/raw/food/
-   s3://<your-bucket>/raw/menu/
-   s3://<your-bucket>/raw/orders/
-   s3://<your-bucket>/raw/order_items/
-   s3://<your-bucket>/raw/reviews/
-   ```
+Enable the `foodIntel_batch` DAG and trigger it manually, or allow its daily
+schedule to run.
 
-2. Configure the AWS IAM role and trust relationship required by the
-   Snowflake storage integration. Review `aws/iam/s3-read-policy.json` and
-   replace its environment-specific bucket with your own value.
+## Run the Streamlit applications
 
-3. Replace the example/environment-specific AWS values in
-   `snowflake/02_storage_integraion.sql` and
-   `snowflake/03_stage_and_formats.sql`. Do not put credentials or external
-   IDs in SQL files committed to Git.
-
-4. Run the Snowflake scripts in order:
-
-   ```text
-   snowflake/01_setup.sql
-   snowflake/02_storage_integraion.sql
-   snowflake/03_stage_and_formats.sql
-   snowflake/04_raw_tables.sql
-   snowflake/05_load_data.sql
-   ```
-
-5. Verify the row counts returned by the final script. This validates the
-   RAW/BRONZE layer before building Silver and Gold models.
-
-6. Configure `~/.dbt/profiles.yml`, then run `dbt debug`, `dbt run`, and
-   `dbt test` from the `foodIntel/` directory.
-
-## Security and privacy
-
-This repository intentionally does **not** include raw CSV data or credentials.
-The source files contain personal and sensitive-looking fields such as names,
-emails, passwords, addresses, user identifiers, order details, and review
-text. Keep them in protected storage and use anonymized or synthetic fixtures
-for examples and tests.
-
-Before publishing, rotate any AWS/Snowflake credential or external ID that has
-ever been committed, shared, or exposed. Also review account IDs, bucket names,
-role ARNs, URLs, and IAM policies for unwanted environment disclosure.
-
-To verify what Git would include before the first push:
+Run the RAG application:
 
 ```bash
-git init
-git status --short --ignored
-git add README.md .gitignore snowflake aws
-git diff --cached --stat
-git diff --cached --name-only
+cd ai
+streamlit run rag.py
 ```
 
-If a sensitive file was staged before it was added to `.gitignore`, remove it
-from the index without deleting the local copy:
+Run the text-to-SQL application:
 
 ```bash
-git rm --cached credentials
-git rm --cached data/*.csv
+cd ai
+streamlit run text_to_sql.py
 ```
 
-## Roadmap
+## Authentication and security
 
-- Parameterize environment-specific Snowflake and S3 configuration
-- Expand dbt tests, documentation, and incremental models
-- Add stronger data-quality tests, CI/CD, secret management, and monitoring
-- Add environment-specific configuration and a least-privilege service role
+Snowflake automation uses RSA key-pair authentication so scheduled jobs do not
+need a user to enter an MFA code. Applications should use a least-privilege
+Snowflake role and read-only access for text-to-SQL queries.
 
-## Interview summary
-
-> FoodINTEL is a Snowflake-based medallion data platform orchestrated by Airflow. Source CSV files land in S3, Snowflake loads them into RAW, dbt creates Silver staging views and Gold marts, and AI services enrich reviews, support RAG, and generate read-only SQL for business questions. PostgreSQL stores Airflow metadata, while Snowflake stores the analytical data.
-
-See [`architecture/interview_questions.md`](architecture/interview_questions.md)
-for interview questions and answers.
+If a credential or API key has been exposed, rotate it immediately.
